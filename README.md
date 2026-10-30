@@ -107,4 +107,58 @@ frontend/
 │   │   │   ├── SpeciesGrid.jsx
 │   │   │   ├── SpeciesDetailModal.jsx
 │   │   │   └── SpeciesSearchFilter.jsx
-│
+│   │   ├── pollution/
+│   │   │   ├── PollutionSeverityCard.jsx
+│   │   │   ├── DebrisBreakdownChart.jsx
+│   │   │   └── WaterClarityMeter.jsx
+│   │   ├── density/
+│   │   │   ├── CoverageChart.jsx
+│   │   │   └── DensityHeatmap.jsx
+│   │   ├── reports/
+│   │   │   ├── ReportGeneratorForm.jsx
+│   │   │   ├── ReportTable.jsx
+│   │   │   ├── ReportPreviewModal.jsx
+│   │   │   └── ExportButton.jsx
+│   │   └── dashboard/
+│   │       ├── StatsOverview.jsx
+│   │       ├── RecentScansList.jsx
+│   │       └── MarineMapView.jsx
+│   ├── context/
+│   │   ├── AuthContext.jsx
+│   │   └── ScanContext.jsx
+│   ├── hooks/
+│   │   ├── useAuth.js
+│   │   ├── useImageScanner.js
+│   │   ├── useCoralAnalysis.js
+│   │   ├── useSpeciesCatalog.js
+│   │   └── useReports.js
+│   ├── pages/
+│   │   ├── HomePage.jsx
+│   │   ├── LoginPage.jsx
+│   │   ├── RegisterPage.jsx
+│   │   ├── DashboardPage.jsx
+│   │   ├── ScannerPage.jsx
+│   │   ├── AnalysisDetailsPage.jsx
+│   │   ├── SpeciesCatalogPage.jsx
+│   │   ├── ReportsPage.jsx
+│   │   ├── ProfilePage.jsx
+│   │   └── NotFoundPage.jsx
+│   ├── routes/
+│   │   └── AppRoutes.jsx
+│   ├── styles/
+│   │   ├── globals.css
+│   │   └── tailwind.css
+│   ├── utils/
+│   │   ├── constants.js
+│   │   ├── formatters.js
+│   │   ├── canvasHelpers.js
+│   │   └── exportHelpers.js
+│   ├── App.jsx
+│   └── main.jsx
+├── .env
+├── .env.example
+├── .gitignore
+├── index.html
+├── package.json
+├── tailwind.config.js
+└── vite.config.js
