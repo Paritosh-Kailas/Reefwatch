@@ -1,16 +1,20 @@
 const mongoose = require('mongoose');
-
+ 
+// Scans need a user and an image; rows imported from a dataset do not.
+const forScansOnly = function () {
+  return this.source !== 'dataset';
+};
+ 
 const pollutionAnalysisSchema = new mongoose.Schema(
   {
-    userId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
-      required: true,
+    source: { type: String, enum: ['scan', 'dataset'], default: 'scan', index: true },
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: forScansOnly },
+    imageUrl: { type: String, required: forScansOnly },
+    location: {
+      type: { type: String, enum: ['Point'], default: 'Point' },
+      coordinates: { type: [Number] }, // [longitude, latitude]
     },
-    imageUrl: {
-      type: String,
-      required: true,
-    },
+    pollutionScore: { type: Number, min: 0, max: 100 }, // 0-100, set for dataset rows
     debrisDetected: [
       {
         debrisType: {
@@ -18,27 +22,12 @@ const pollutionAnalysisSchema = new mongoose.Schema(
           enum: ['Plastic Bottle', 'Fishing Gear/Net', 'Plastic Bag', 'Metal Debris', 'Glass', 'Microplastic Particles', 'Other'],
           required: true,
         },
-        confidence: {
-          type: Number,
-          required: true,
-          min: 0,
-          max: 1,
-        },
+        confidence: { type: Number, required: true, min: 0, max: 1 },
         estimatedVolumeCm3: Number,
-        boundingBox: {
-          xMin: Number,
-          yMin: Number,
-          xMax: Number,
-          yMax: Number,
-        },
+        boundingBox: { xMin: Number, yMin: Number, xMax: Number, yMax: Number },
       },
     ],
-    waterClarityIndex: {
-      type: Number, // 0 (Extremely Turbid) to 100 (Crystal Clear)
-      min: 0,
-      max: 100,
-      required: true,
-    },
+    waterClarityIndex: { type: Number, min: 0, max: 100, required: forScansOnly }, // 0 turbid, 100 clear
     pollutionSeverity: {
       type: String,
       enum: ['Pristine', 'Low', 'Moderate', 'Critical'],
@@ -49,11 +38,11 @@ const pollutionAnalysisSchema = new mongoose.Schema(
       toxicityRiskLevel: { type: String, enum: ['None', 'Low', 'Medium', 'High'], default: 'None' },
     },
   },
-  {
-    timestamps: true,
-  }
+  { timestamps: true }
 );
-
+ 
 pollutionAnalysisSchema.index({ pollutionSeverity: 1, createdAt: -1 });
-
+pollutionAnalysisSchema.index({ location: '2dsphere' });
+ 
 module.exports = mongoose.model('PollutionAnalysis', pollutionAnalysisSchema);
+ 
