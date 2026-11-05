@@ -229,3 +229,54 @@ Backend: PORT, NODE_ENV, CLIENT_URL, MONGO_URI, JWT_SECRET, JWT_EXPIRES_IN, CLOU
 - AI inference needs a verified model, configured credentials, installed dependencies and evaluation.
 - Sample coral JPEGs and the legacy logo/favicon files are invalid placeholders.
 - Add automated tests for CSV parsing, missing measurements, coordinate bounds, aggregation by unit/method, API responses and map rendering.
+
+
+## Density report and global pollution map
+
+The application exposes two separate analysis views:
+
+- **Global microplastics map:** `/dashboard` renders `MarineMapView.jsx`, which calls `getPollutionMap()` through `pollutionApi.js`. The Express route `/api/pollution/map` is handled by `pollutioncontroller.js`, which parses `server/uploads/microplastics.csv`, validates coordinates, groups observations without mixing units/methods/settings, and returns archived NOAA records. If the API is unreachable, the map intentionally displays labelled demo markers.
+- **Density report:** `/reports/density` renders `ReportsPage.jsx`. It requests `/api/density/map` and `/api/density/stats` through `densityApi.js`, displays summary cards and a searchable/filterable reef-coverage table, and exports the currently filtered rows as a CSV file in the browser. The page labels the current density values as **illustrative samples** because `densitycontroller.js` currently uses hard-coded example values. These are not verified reef survey observations.
+
+### Density report file flow
+
+| File | What its code does |
+|---|---|
+| `client/src/pages/ReportsPage.jsx` | Fetches density map/statistics in parallel; handles loading/error states; filters by reef/country and density class; renders summary cards/table; creates a downloadable CSV from visible rows. |
+| `client/src/routes/AppRoutes.jsx` | Registers `/reports/density` and maps it to `ReportsPage`; keeps dashboard at `/dashboard`. |
+| `client/src/components/common/Navbar.jsx` | Adds navigation links to Home, Global pollution map and Density report. |
+| `client/src/api/densityApi.js` | Axios wrappers for `GET /density/map` and `GET /density/stats`. |
+| `server/routes/densityroutes.js` | Maps `/map` and `/stats` to density controller handlers. |
+| `server/controllers/densitycontroller.js` | Currently returns illustrative hard-coded reef coverage records and calculated summary counts; replace this source with a cited survey dataset before making scientific claims. |
+| `client/src/components/dashboard/MarineMapView.jsx` | Displays the global microplastics map, data source/mode, filters, markers and source details. |
+| `client/src/api/pollutionApi.js` | Axios wrappers for pollution map and statistics. |
+| `server/routes/pollutionroutes.js` | Maps pollution API paths to CSV controller functions. |
+| `server/controllers/pollutioncontroller.js` | Parses and aggregates the NOAA CSV and returns map hotspots/statistics. |
+| `server/uploads/microplastics.csv` | Bundled archived source observations consumed by the pollution controller. |
+
+### Running locally
+
+From the repository root, install and start the backend and frontend in separate terminals:
+
+```bash
+cd server
+npm install
+npm start
+```
+
+```bash
+cd client
+npm install
+npm run dev
+```
+
+Set `VITE_API_BASE_URL=http://localhost:5000/api` in the frontend environment for local development. Configure backend `CLIENT_URL=http://localhost:5173`. MongoDB is not required for the CSV-backed pollution map or the current illustrative density endpoints; database-backed account and saved-report features do require a valid `MONGO_URI`.
+
+### Route quick reference
+
+| Browser route | Feature |
+|---|---|
+| `/` | Reefwatch landing page |
+| `/dashboard` | Global NOAA microplastics observations map (archived dataset, not live sensors) |
+| `/reports/density` | Reef density summary, searchable table and CSV export (illustrative API data at present) |
+| `/login`, `/register` | Authentication screens; check current implementation before treating as complete |
