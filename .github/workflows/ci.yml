@@ -28,10 +28,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
       - name: Install backend dependencies
         working-directory: server
-        run: npm ci
+        run: npm install
       - name: Check JavaScript syntax
         working-directory: server
         run: find . -name '*.js' -not -path './node_modules/*' -print0 | xargs -0 -n1 node --check
