@@ -48,7 +48,7 @@ function FlyTo({ target }) {
 export default function MarineMapView({ className = 'h-[680px]' }) {
   const [hotspots, setHotspots] = useState([]);
   const [total, setTotal] = useState(0);
-  const [reefBelt, setReefBelt] = useState(true);
+  const [reefBelt, setReefBelt] = useState(false);
   const [minScore, setMinScore] = useState(0);
   const [selected, setSelected] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -58,7 +58,7 @@ export default function MarineMapView({ className = 'h-[680px]' }) {
 
   const load = useCallback(async () => {
     try {
-      const { data } = await getPollutionMap({ reefBelt });
+      const { data } = await getPollutionMap();
       if (!Array.isArray(data?.hotspots)) throw new Error('Unexpected pollution API response');
       setHotspots(data.hotspots);
       setTotal(Number(data.totalReadings) || 0);
@@ -133,7 +133,7 @@ export default function MarineMapView({ className = 'h-[680px]' }) {
                         <p className="text-xs text-slate-600">Most common concentration class: {h.concentrationClass || 'Unclassified'}</p>
                         {h.marineSetting && <p className="text-xs text-slate-600">Marine setting: {h.marineSetting}</p>}
                         {h.samplingMethod && <p className="text-xs text-slate-600">Sampling method: {h.samplingMethod}</p>}
-                        {h.avgConcentration != null && <p className="text-xs text-slate-600">Mean measured concentration: {Number(h.avgConcentration).toLocaleString()} {h.unit}</p>}
+                        {h.avgConcentration != null && <p className="text-xs text-slate-600">Mean measured concentration: {Number(h.avgConcentration).toLocaleString()} {h.unit || '(unit not supplied)'}</p>}
                         <p className="text-xs text-slate-600">Class display score: {h.score}/100 (derived from source class)</p>
                         {h.sampleDateStart && <p className="text-xs text-slate-600">Sample dates: {h.sampleDateStart}{h.sampleDateEnd && h.sampleDateEnd !== h.sampleDateStart ? ` to ${h.sampleDateEnd}` : ''}</p>}
                         {h.accessionUrl && <a className="text-xs text-blue-700 underline" href={h.accessionUrl} target="_blank" rel="noreferrer">Open NCEI record</a>}
@@ -142,7 +142,7 @@ export default function MarineMapView({ className = 'h-[680px]' }) {
                     <div className="my-2 h-1.5 rounded bg-slate-200">
                       <div className="h-full rounded" style={{ width: `${h.score}%`, background: color }} />
                     </div>
-                    <p className="text-xs">{h.count} source sample{h.count === 1 ? '' : 's'}</p>
+                    <p className="text-xs">{h.count} source record{h.count === 1 ? '' : 's'}{h.measuredCount != null && h.measuredCount !== h.count ? ` · ${h.measuredCount} with numeric measurements` : ''}</p>
                   </div>
                 </Popup>
               </CircleMarker>
@@ -153,8 +153,8 @@ export default function MarineMapView({ className = 'h-[680px]' }) {
 
       <aside className="absolute left-3 top-3 z-[1000] flex max-h-[calc(100%-1.5rem)] w-72 flex-col overflow-hidden rounded-2xl border border-teal-200/15 bg-[#071f26]/95 text-slate-100 shadow-xl backdrop-blur">
         <div className="p-4">
-          <h2 className="font-serif text-xl font-bold tracking-tight">Reef pollution map</h2>
-          <p className="mt-1 text-xs text-teal-100/70">Brighter areas indicate higher microplastic concentration classes. Select a marker for details.</p>
+          <h2 className="font-serif text-xl font-bold tracking-tight">Global microplastics map</h2>
+          <p className="mt-1 text-xs text-teal-100/70">All mappable source observations worldwide. Select a marker to inspect its measurements and source.</p>
         </div>
         <div className="grid grid-cols-3 border-y border-teal-200/15 text-center">
           <div className="border-r border-teal-200/15 p-3">
@@ -173,7 +173,7 @@ export default function MarineMapView({ className = 'h-[680px]' }) {
         <div className="space-y-3 p-4">
           <label className="flex cursor-pointer items-center gap-2 text-sm">
             <input type="checkbox" checked={reefBelt} onChange={(e) => setReefBelt(e.target.checked)} className="accent-teal-300" />
-            Reef belt only (32°N to 32°S)
+            Tropical reef belt only (32°N to 32°S)
           </label>
           <div>
             <label htmlFor="minScore" className="flex justify-between text-xs text-teal-100/60">
@@ -185,12 +185,12 @@ export default function MarineMapView({ className = 'h-[680px]' }) {
         <div className="min-h-0 flex-1 overflow-y-auto px-2 pb-3">
           {loading && <p className="p-3 text-sm text-teal-100/60">Loading reef locations…</p>}
           {!loading && shown.length === 0 && (
-            <p className="p-3 text-sm text-teal-100/60">No locations match these filters. Lower the minimum score or turn off reef-belt filtering.</p>
+            <p className="p-3 text-sm text-teal-100/60">No locations match these filters. Lower the minimum score or turn off the tropical reef-belt filter.</p>
           )}
-          {shown.slice(0, 60).map((h) => (
+          {shown.map((h) => (
             <button key={h.id} onClick={() => setSelected(h)} className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left hover:bg-teal-300/10 focus-visible:bg-teal-300/10 focus-visible:outline-none">
               <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-xs font-bold text-[#1a0f08]" style={{ background: scoreColor(h.score) }}>{h.score}</span>
-              <span className="text-sm">{label(h)}<small className="block text-xs text-teal-100/50">{h.count} sample readings</small></span>
+              <span className="text-sm">{label(h)}<small className="block text-xs text-teal-100/50">{h.count} source records</small></span>
             </button>
           ))}
         </div>
