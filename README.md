@@ -1,194 +1,299 @@
 # Reefwatch
 
-Reefwatch is a React + Express application for exploring marine microplastics observations. Its primary working feature is a global Leaflet map backed by the NOAA National Centers for Environmental Information (NCEI) Marine Microplastics dataset bundled in this repository.
+Reefwatch is a React + Express application for exploring marine microplastics observations and prototype reef-density summaries. The main data feature is a Leaflet global map backed by the NOAA National Centers for Environmental Information (NCEI) marine microplastics CSV stored in this repository.
 
-> **Data integrity:** The CSV contains archived field observations. It is not a live sensor network. Measurements from different marine settings, sampling methods and units are not directly interchangeable.
+> **Data integrity:** The microplastics CSV is an archived dataset snapshot, not a live sensor feed. Different marine settings, collection methods and measurement units are not directly comparable. The density report currently uses illustrative backend examples, not verified reef-survey measurements.
 
-## Current status
+## 1. Features and routes
 
-**Working:** React dashboard, OpenStreetMap basemap, CSV-backed global microplastics map, marker details, reef-belt and minimum-class filters, labelled demo fallback, Express map/statistics/reload endpoints, Vercel SPA routing, Render blueprint.
-
-**Incomplete/prototype:** AI image analysis, coral health, species catalogue UI, density analytics, reports and some authentication UI. Several of these backend modules still return mock data or require database/model configuration. Do not present them as verified production features.
-
-## How the global map works
-
-1. The Express process starts in server/server.js and mounts server/routes/pollutionroutes.js at /api/pollution.
-2. GET /api/pollution/map calls getPollutionMap in server/controllers/pollutioncontroller.js.
-3. The controller reads server/uploads/microplastics.csv with csv-parse. It validates coordinates and retains each row with valid latitude/longitude plus either a numeric microplastics measurement or a source concentration class.
-4. Records are grouped by country/site, rounded coordinates, marine setting, sampling method and unit. Different units (for example pieces per cubic metre and pieces per kilogram) are never averaged together.
-5. A marker represents a grouped site/context. Its popup shows source-record count, numeric-measurement count, mean measurement when available, common source concentration class, dates, method, setting and references.
-6. The frontend requests the API through client/src/api/pollutionApi.js and renders the map in client/src/components/dashboard/MarineMapView.jsx.
-7. If the backend cannot be reached, the map shows a small set of clearly labelled illustrative demo markers instead of pretending those are observations.
-
-### Important score warning
-
-The map converts source concentration classes to a 0–100 display score (Very Low 15, Low 35, Medium 60, High 80, Very High 95; unclassified 50). This is only a colour/slider encoding. It is not a validated pollution-risk score and must not be used for scientific ranking. Inspect the original measurement, unit, setting, method and source citation.
-
-### Dataset source
-
-- NOAA NCEI Marine Microplastics Database: https://www.ncei.noaa.gov/products/microplastics
-- NOAA NCEI map help: https://www.ncei.noaa.gov/products/microplastics/help
-- Database paper: https://doi.org/10.1038/s41597-023-02632-y
-
-The CSV is a repository snapshot. Updating it requires obtaining a newer dataset, checking its schema/provenance, replacing the file and redeploying the backend.
-
-## File-by-file guide
-
-### Root
-| File | Function |
-|---|---|
-| .gitignore | Excludes local dependencies, secrets, build output and generated files from Git. |
-| README.md | Main project, setup, API, limitations and file reference. |
-| PROJECT_GUIDE.md | Extended CSV, API, deployment and data-caveat notes. |
-| render.yaml | Render Blueprint for deploying the Express API. |
-
-### Frontend — client/
-| File or folder | Function |
-|---|---|
-| package.json / package-lock.json | Frontend scripts, libraries and locked dependency versions. |
-| index.html | Vite HTML shell and React mount element. |
-| .env.example | Example VITE_API_BASE_URL setting. |
-| .gitignore | Frontend-specific ignored files. |
-| README.md | Vite starter documentation; use this root README for Reefwatch-specific instructions. |
-| vite.config.js | Active Vite build/dev config and React plugin. |
-| vite.config.ts | Unused TypeScript starter config. |
-| tailwind.config.js | Tailwind content paths and theme configuration. |
-| postcss.config.js | Tailwind and Autoprefixer processing. |
-| eslint.config.js | Frontend lint rules. |
-| tsconfig.json, tsconfig.app.json, tsconfig.node.json | TypeScript starter configuration; current app is JavaScript. |
-| vercel.json | Rewrites deep links such as /dashboard to index.html for React Router. |
-| public/favicon.svg | Browser tab icon. |
-| public/icons.svg | SVG icon sprite. |
-| public/favicon.ico, public/logo.svg | 2-byte placeholders; not valid finished assets. |
-| public/sample-corals/*.jpg | Empty image placeholders; not valid JPEG images. |
-| src/main.jsx | Active entry point; mounts React and imports global CSS. |
-| src/App.jsx | Root component that renders AppRoutes. |
-| src/main.tsx, src/App.tsx | Unused TypeScript starter files; active files are main.jsx and App.jsx. |
-| src/App.css, src/index.css | Starter stylesheets not imported by the active entry. |
-| src/styles/globals.css | Active global stylesheet. |
-| src/styles/tailwind.css | Tailwind directives and utilities stylesheet. |
-| src/routes/AppRoutes.jsx | Maps URL paths to home, dashboard, login, register and not-found pages. |
-| src/pages/HomePage.jsx | Landing page and navigation to the global map. |
-| src/pages/DashboardPage.jsx | Dashboard shell that hosts MarineMapView. |
-| src/pages/LoginPage.jsx, RegisterPage.jsx | Current login/register shells; forms are not wired yet. |
-| src/pages/NotFoundPage.jsx | Unknown-route fallback. |
-| src/pages/AnalysisDetailsPage.jsx | Empty future analysis-detail page. |
-| src/pages/ProfilePage.jsx | Empty future user profile page. |
-| src/pages/ReportsPage.jsx | Empty future reports page. |
-| src/pages/ScannerPage.jsx | Empty future image-scanner page. |
-| src/pages/SpeciesCatalogPage.jsx | Empty future species catalogue page. |
-| src/components/common/Navbar.jsx | Main navigation. |
-| src/components/common/AlertBanner.jsx, Footer.jsx, LoadingSpinner.jsx, Modal.jsx, ProtectedRoute.jsx, Sidebar.jsx | Empty reusable UI placeholders; not implemented. |
-| src/components/auth/LoginForm.jsx, RegisterForm.jsx, ResetPasswordForm.jsx | Empty authentication form placeholders. |
-| src/components/dashboard/MarineMapView.jsx | Main Leaflet map: API loading, markers, popups, filters, summary counts and demo fallback. |
-| src/components/dashboard/RecentScansList.jsx, StatsOverview.jsx | Empty dashboard component placeholders. |
-| src/components/coral/BleachingGauge.jsx, CoralHealthCard.jsx, CoralTypeBadge.jsx | Empty coral UI placeholders. |
-| src/components/density/CoverageChart.jsx, DensityHeatmap.jsx | Empty density visualization placeholders. |
-| src/components/pollution/DebrisBreakdownChart.jsx, PollutionSeverityCard.jsx, WaterClarityMeter.jsx | Empty pollution UI placeholders. |
-| src/components/reports/ExportButton.jsx, ReportGeneratorForm.jsx, ReportPreviewModal.jsx, ReportTable.jsx | Empty report UI placeholders. |
-| src/components/scanner/BoundingBoxCanvas.jsx, CameraCapture.jsx, ImageUploader.jsx, ScanProgressTracker.jsx | Empty scanner UI placeholders. |
-| src/components/species/SpeciesCard.jsx, SpeciesDetailModal.jsx, SpeciesGrid.jsx, SpeciesSearchFilter.jsx | Empty species UI placeholders. |
-| src/api/axiosInstance.js | Shared Axios client, API base URL, credentials and JWT header. |
-| src/api/authApi.js | Login, registration and current-user request wrappers. |
-| src/api/userApi.js | User endpoint request wrappers. |
-| src/api/coralApi.js | Coral endpoint request wrappers. |
-| src/api/densityApi.js | Density endpoint request wrappers. |
-| src/api/pollutionApi.js | Pollution map and statistics request wrappers. |
-| src/api/reportApi.js | Report endpoint request wrappers. |
-| src/api/speciesApi.js | Species endpoint request wrappers. |
-| src/context/AuthContext.jsx, ScanContext.jsx | Empty future shared-state providers. |
-| src/hooks/useAuth.js, useCoralAnalysis.js, useImageScanner.js, useReports.js, useSpeciesCatalog.js | Empty future reusable React hooks. |
-| src/utils/canvasHelpers.js | Empty canvas/image-coordinate helper placeholder. |
-| src/utils/constants.js | Empty shared-constants placeholder. |
-| src/utils/exportHelpers.js | Empty report/file-export helper placeholder. |
-| src/utils/formatters.js | Empty date/number formatting helper placeholder. |
-| src/assets/hero.png | Landing-page image asset. |
-| src/assets/react.svg, vite.svg | Unused starter graphics. |
-| src/assets/icons/.gitkeep, src/assets/images/.gitkeep | Keep otherwise empty asset directories in Git. |
-
-### Backend — server/
-| File or folder | Function |
-|---|---|
-| package.json / package-lock.json | Backend scripts, dependencies and locked versions. |
-| .env.example | Template for backend environment variables; never commit real secrets. |
-| .gitignore | Excludes backend secrets, dependencies and generated files. |
-| server.js | Express entry point: CORS, JSON parsing, optional MongoDB, route mounting, health check and error handling. |
-| config/db.js | Mongoose/MongoDB connection setup. |
-| config/cloudinary.js | Cloudinary image-storage configuration. |
-| config/hfconfig.js | Hugging Face inference client configuration; optional and requires package/token setup. |
-| routes/authroutes.js | Registration, login and current-user routes. |
-| routes/userroutes.js | User profile routes. |
-| routes/densityroutes.js | Reef-density map and statistics routes. |
-| routes/pollutionroutes.js | Pollution map, statistics and CSV-cache reload routes. |
-| routes/coralroutes.js | Coral-analysis routes. |
-| routes/speciesroutes.js | Species catalogue CRUD routes. |
-| routes/reportroutes.js | Authenticated report routes. |
-| controllers/authcontroller.js | User registration, password verification and JWT responses. |
-| controllers/usercontroller.js | User profile request handlers. |
-| controllers/densitycontroller.js | Hard-coded illustrative reef-density data; not verified observations. |
-| controllers/pollutioncontroller.js | CSV parsing, coordinate validation, grouping, aggregation and map/statistics responses. |
-| controllers/coralcontrollers.js | CRUD handlers for saved coral-analysis records. |
-| controllers/speciescontroller.js | Species catalogue database handlers. |
-| controllers/reportcontroller.js | Report database handlers. |
-| controllers/detectioncontroller.js | Species-detection record handlers; currently not mounted in server.js. |
-| models/user.js | Mongoose user schema and password comparison method. |
-| models/densityanalysis.js | Reef-density record schema. |
-| models/pollutionanalysis.js | Pollution-analysis record schema. |
-| models/coralanalysis.js | Coral-analysis record schema. |
-| models/species.js | Species catalogue schema. |
-| models/speciesdetection.js | Species-detection schema. |
-| models/report.js | Saved-report schema. |
-| middleware/authmiddleware.js | JWT verification and role authorization. |
-| middleware/errormiddleware.js | Standard API error responses. |
-| middleware/uploadmiddleware.js | Multer file-upload configuration. |
-| middleware/validationmiddleware.js | Express-validator result handling. |
-| services/coralAnalysisService.js | Coral-analysis service stub. |
-| services/densityAnalysisService.js | Density-analysis service stub. |
-| services/huggingFaceService.js | Image classification helper for Hugging Face inference. |
-| services/pollutionAnalysisService.js | Currently creates mock image-analysis results; not used by the CSV map. |
-| services/reportService.js | Report service stub. |
-| services/speciesDetectionService.js | Species-detection service stub. |
-| utils/apierror.js | Custom HTTP/API error class. |
-| utils/generatetoken.js | JWT signing helper. |
-| utils/imageprocessor.js | Image-processing helper. |
-| utils/samplehotspots.js | Legacy illustrative hotspots; not used by the CSV-backed map. |
-| validators/authvalidator.js | Authentication input validation rules. |
-| validators/coralvalidator.js | Coral input validation rules. |
-| validators/pollutionvalidator.js | Pollution input validation rules. |
-| validators/speciesvalidator.js | Species input validation rules. |
-| uploads/microplastics.csv | Bundled NOAA NCEI archived microplastics observations used by the map. |
-
-## API reference
-
-| Method | Endpoint | Description |
+| Browser route | Feature | Data status |
 |---|---|---|
-| GET | /api/health | API health and whether MongoDB is configured. |
-| GET | /api/pollution/map | All valid geolocated CSV observations grouped into map sites. |
-| GET | /api/pollution/stats | Record count, measured-record count, site count, concentration classes and units. |
-| POST | /api/pollution/import | Clears cache and reloads the bundled CSV; does not upload a new file. |
-| GET | /api/density/map | Illustrative reef-density values (mock). |
-| GET | /api/density/stats | Summary of illustrative reef-density values (mock). |
-| /api/auth/* | Auth routes | Registration, login and current-user operations. |
-| /api/species/* | Species routes | Species CRUD; MongoDB required. |
-| /api/coral/* | Coral routes | Coral-analysis record operations; MongoDB required. |
-| /api/reports/* | Report routes | Protected report operations; MongoDB and JWT required. |
-| /api/users/* | User routes | User operations; MongoDB and JWT required. |
+| `/` | Reefwatch home page with feature cards | Navigation/overview |
+| `/dashboard` | Global microplastics map; inspect observation markers, filters and source details | Archived NOAA CSV observations when API is connected; labelled demo fallback if unavailable |
+| `/reports/density` | Reef density summary, searchable/filterable table and CSV export | Illustrative sample data from the current density controller |
+| `/login`, `/register` | Authentication page shells | Backend endpoints exist; frontend forms are not fully wired |
 
-## Run locally
+### Global pollution map data flow
 
-Use a current Node.js LTS release and npm. MongoDB is optional for the CSV map but required for persisted accounts, reports and analysis records.
+1. `server/server.js` creates the Express API and mounts the pollution router at `/api/pollution`.
+2. `server/routes/pollutionroutes.js` maps map/statistics/reload requests to the pollution controller.
+3. `server/controllers/pollutioncontroller.js` parses `server/uploads/microplastics.csv`, validates geographic coordinates, and aggregates observations into map locations.
+4. Aggregation keeps country/site, rounded coordinates, marine setting, sampling method and measurement unit in the grouping key. It does not average unlike units together.
+5. The API returns marker metadata such as source-record count, numeric measurement count, mean measurement where available, concentration class, date range, method, setting and source references.
+6. `client/src/api/pollutionApi.js` calls the API and `client/src/components/dashboard/MarineMapView.jsx` renders the Leaflet map, markers, filters and source details.
+7. If the API is unavailable, the map shows clearly labelled illustrative demo markers. Demo values must not be described as measured pollution observations.
 
-Backend terminal:
+**Map score warning:** concentration classes are mapped to a 0–100 visual score for marker styling/filtering. This is not a validated pollution-risk score and must not be used for scientific ranking. Read the original measurement, unit, sampling context and source citation.
+
+### Density report data flow
+
+1. `client/src/pages/ReportsPage.jsx` requests the density map and statistics.
+2. `client/src/api/densityApi.js` sends requests to the density API.
+3. `server/routes/densityroutes.js` routes requests to `server/controllers/densitycontroller.js`.
+4. The controller currently returns hard-coded illustrative reef records and summary statistics.
+5. The page displays summary cards, search and density-class filters, a table, and a CSV export of the filtered rows.
+
+The report interface is implemented, but its current values are not a verified global reef-density dataset. Connect a cited reef survey source before using the numbers as scientific findings.
+
+## 2. Data files and assets
+
+These are the repository's committed data/content files. There is currently **one structured observation dataset CSV**.
+
+| Path | Type | What it contains / how code uses it |
+|---|---|---|
+| `server/uploads/microplastics.csv` | CSV, ~619 KB | Bundled NOAA NCEI marine microplastics observation snapshot. The pollution controller reads it to produce map markers and statistics. It includes observation identifiers, sample dates, latitude/longitude, measured concentration, unit, concentration class, ocean/region/country/site, marine setting or sampling context, method and source/reference fields where supplied. It is archived source data, not live data. |
+| `client/src/assets/hero.png` | PNG image | Hero/landing-page visual imported by frontend code where referenced. |
+| `client/public/favicon.svg` | SVG image | Browser tab icon served directly from the public folder. |
+| `client/public/icons.svg` | SVG sprite | Collection of reusable SVG symbols/icons. |
+| `client/public/favicon.ico` | Placeholder (2 bytes) | Not a valid finished ICO image; use the SVG favicon instead or replace this asset. |
+| `client/public/logo.svg` | Placeholder (2 bytes) | Empty placeholder, not a usable logo. |
+| `client/public/sample-corals/bleached-coral.jpg` | Placeholder (2 bytes) | Empty placeholder, not a valid coral photograph. |
+| `client/public/sample-corals/brain-coral.jpg` | Placeholder (2 bytes) | Empty placeholder, not a valid coral photograph. |
+| `client/public/sample-corals/staghorn-coral.jpg` | Placeholder (2 bytes) | Empty placeholder, not a valid coral photograph. |
+| `client/src/assets/react.svg` | SVG image | Unused Vite/React starter graphic. |
+| `client/src/assets/vite.svg` | SVG image | Unused Vite starter graphic. |
+| `client/src/assets/icons/.gitkeep` | Git placeholder | Keeps the otherwise empty icons asset folder in Git. |
+| `client/src/assets/images/.gitkeep` | Git placeholder | Keeps the otherwise empty images asset folder in Git. |
+
+No additional CSV, JSON, GeoJSON or spreadsheet data files are currently tracked in the repository tree. The density report does not read a density CSV yet; it gets illustrative values from the density controller. The image files under `sample-corals` are placeholders and must be replaced before image-analysis features use them.
+
+### CSV handling and updating the dataset
+
+- Keep the source file at `server/uploads/microplastics.csv` unless you also update the path in the pollution controller.
+- Preserve the source header names and provenance columns when replacing the file. Check the new download's licence, citation, date coverage and schema before committing it.
+- Do not combine concentrations with different units or sampling methods into a single average.
+- The backend caches parsed CSV data in memory. Restart/redeploy the backend after replacing the CSV, or call the supported cache reload endpoint if appropriate.
+- The current dataset snapshot is from NOAA NCEI. See [NOAA NCEI Marine Microplastics](https://www.ncei.noaa.gov/products/microplastics), [NOAA map help](https://www.ncei.noaa.gov/products/microplastics/help), and the [database paper](https://doi.org/10.1038/s41597-023-02632-y).
+
+## 3. File-by-file code reference
+
+The tables below list the tracked project files and briefly describe the purpose of their code/configuration. A file marked **placeholder** is present in Git but currently has no implemented feature code.
+
+### Repository root and automation
+
+| File | Explanation |
+|---|---|
+| `.gitignore` | Root Git ignore rules for local secrets, dependencies, build outputs and generated files. |
+| `.github/workflows/ci.yml` | GitHub Actions workflow for automated repository checks on configured pushes/pull requests. |
+| `README.md` | This project overview, setup guide, data inventory and file-by-file code reference. |
+| `PROJECT_GUIDE.md` | Extended technical guide focused on the CSV, API behavior, deployment and data limitations. |
+| `render.yaml` | Render Blueprint declaring how to build, start and health-check the Express backend service. |
+
+### Frontend configuration — `client/`
+
+| File | Explanation |
+|---|---|
+| `client/package.json` | Frontend package metadata, npm scripts and direct dependencies. |
+| `client/package-lock.json` | Exact dependency tree versions for repeatable npm installs; generated by npm. |
+| `client/.env.example` | Example frontend environment setting, including the API base URL key. Copy to a local `.env` and set values for local development. |
+| `client/.gitignore` | Ignores frontend-local dependencies, build output and environment files. |
+| `client/README.md` | Vite starter documentation; this root README is the Reefwatch-specific guide. |
+| `client/index.html` | Vite HTML document, page metadata and React mount element. |
+| `client/vite.config.js` | Active Vite configuration and React plugin setup. |
+| `client/vite.config.ts` | TypeScript starter Vite configuration; the active app build uses `vite.config.js`. |
+| `client/tailwind.config.js` | Tailwind CSS content scanning and theme configuration. |
+| `client/postcss.config.js` | Configures PostCSS plugins used to process Tailwind CSS and browser prefixes. |
+| `client/eslint.config.js` | ESLint rules and file patterns for frontend code quality checks. |
+| `client/tsconfig.json` | TypeScript project references for the starter TypeScript setup. |
+| `client/tsconfig.app.json` | TypeScript compiler options for app-side starter files. |
+| `client/tsconfig.node.json` | TypeScript compiler options for Node/Vite configuration files. |
+| `client/vercel.json` | Vercel rewrite that sends client-side routes such as `/dashboard` to the SPA entry document. |
+
+### Frontend entry, routing, pages and styles — `client/src/`
+
+| File | Explanation |
+|---|---|
+| `client/src/main.jsx` | Active React entry point; imports global styles and mounts the application. |
+| `client/src/App.jsx` | Root React component; renders the route configuration. |
+| `client/src/routes/AppRoutes.jsx` | Declares browser routes and associates each path with its page component. |
+| `client/src/pages/HomePage.jsx` | Landing page and feature cards linking to the global map and density report. |
+| `client/src/pages/DashboardPage.jsx` | Dashboard page shell that displays the marine map component. |
+| `client/src/pages/ReportsPage.jsx` | Density report UI: fetches density data, shows statistics/table, filters records and exports filtered rows as CSV. |
+| `client/src/pages/LoginPage.jsx` | Login page shell; the complete authentication form flow is not yet wired. |
+| `client/src/pages/RegisterPage.jsx` | Registration page shell; the complete authentication form flow is not yet wired. |
+| `client/src/pages/NotFoundPage.jsx` | Fallback page for unknown browser routes. |
+| `client/src/pages/AnalysisDetailsPage.jsx` | **Placeholder:** reserved for a future analysis-detail view. |
+| `client/src/pages/ProfilePage.jsx` | **Placeholder:** reserved for a user profile page. |
+| `client/src/pages/ScannerPage.jsx` | **Placeholder:** reserved for an image-scanning workflow. |
+| `client/src/pages/SpeciesCatalogPage.jsx` | **Placeholder:** reserved for a species catalogue page. |
+| `client/src/main.tsx` | Unused TypeScript starter entry; active entry is `main.jsx`. |
+| `client/src/App.tsx` | Unused TypeScript starter root component; active root is `App.jsx`. |
+| `client/src/App.css` | Starter/component stylesheet not imported by the active JSX entry flow. |
+| `client/src/index.css` | Legacy/starter stylesheet; active global styles are in `styles/globals.css` and `styles/tailwind.css`. |
+| `client/src/styles/globals.css` | Active global base styles for the application. |
+| `client/src/styles/tailwind.css` | Tailwind CSS directives/utilities entry imported by the active style setup. |
+
+### Frontend API clients — `client/src/api/`
+
+| File | Explanation |
+|---|---|
+| `client/src/api/axiosInstance.js` | Shared Axios instance; centralizes API base URL, credentials and authorization-header behavior. |
+| `client/src/api/pollutionApi.js` | HTTP helpers for pollution map and pollution statistics endpoints. |
+| `client/src/api/densityApi.js` | HTTP helpers for density map and density statistics endpoints. |
+| `client/src/api/authApi.js` | HTTP helpers for registration, login and current-user authentication endpoints. |
+| `client/src/api/userApi.js` | HTTP helpers for user/profile endpoints. |
+| `client/src/api/coralApi.js` | HTTP helpers for coral-analysis endpoints. |
+| `client/src/api/reportApi.js` | HTTP helpers for saved-report endpoints. |
+| `client/src/api/speciesApi.js` | HTTP helpers for species catalogue/detection endpoints. |
+
+### Frontend components — `client/src/components/`
+
+| File | Explanation |
+|---|---|
+| `client/src/components/common/Navbar.jsx` | Shared top navigation with links to Home, Global pollution map, Density report and sign-in. |
+| `client/src/components/dashboard/MarineMapView.jsx` | Main Leaflet map; fetches pollution observations, renders markers/popups, filters, summary metrics, source details and labelled fallback demo markers. |
+| `client/src/components/common/AlertBanner.jsx` | **Placeholder:** intended reusable alert/banner component. |
+| `client/src/components/common/Footer.jsx` | **Placeholder:** intended shared footer. |
+| `client/src/components/common/LoadingSpinner.jsx` | **Placeholder:** intended loading indicator. |
+| `client/src/components/common/Modal.jsx` | **Placeholder:** intended reusable modal dialog. |
+| `client/src/components/common/ProtectedRoute.jsx` | **Placeholder:** intended authentication-gated route wrapper. |
+| `client/src/components/common/Sidebar.jsx` | **Placeholder:** intended sidebar navigation. |
+| `client/src/components/auth/LoginForm.jsx` | **Placeholder:** intended login form component. |
+| `client/src/components/auth/RegisterForm.jsx` | **Placeholder:** intended registration form component. |
+| `client/src/components/auth/ResetPasswordForm.jsx` | **Placeholder:** intended password-reset form component. |
+| `client/src/components/dashboard/RecentScansList.jsx` | **Placeholder:** intended list of recent scan results. |
+| `client/src/components/dashboard/StatsOverview.jsx` | **Placeholder:** intended dashboard metric cards. |
+| `client/src/components/coral/BleachingGauge.jsx` | **Placeholder:** intended coral bleaching indicator. |
+| `client/src/components/coral/CoralHealthCard.jsx` | **Placeholder:** intended coral-health summary card. |
+| `client/src/components/coral/CoralTypeBadge.jsx` | **Placeholder:** intended coral type label. |
+| `client/src/components/density/CoverageChart.jsx` | **Placeholder:** intended reef coverage chart. |
+| `client/src/components/density/DensityHeatmap.jsx` | **Placeholder:** intended density heatmap. |
+| `client/src/components/pollution/DebrisBreakdownChart.jsx` | **Placeholder:** intended debris-category chart. |
+| `client/src/components/pollution/PollutionSeverityCard.jsx` | **Placeholder:** intended pollution severity summary. |
+| `client/src/components/pollution/WaterClarityMeter.jsx` | **Placeholder:** intended water clarity display. |
+| `client/src/components/reports/ExportButton.jsx` | **Placeholder:** intended reusable report export control; current density CSV export is implemented inside `ReportsPage.jsx`. |
+| `client/src/components/reports/ReportGeneratorForm.jsx` | **Placeholder:** intended report-generation form. |
+| `client/src/components/reports/ReportPreviewModal.jsx` | **Placeholder:** intended report preview dialog. |
+| `client/src/components/reports/ReportTable.jsx` | **Placeholder:** intended reusable report table. |
+| `client/src/components/scanner/BoundingBoxCanvas.jsx` | **Placeholder:** intended canvas for image-detection boxes. |
+| `client/src/components/scanner/CameraCapture.jsx` | **Placeholder:** intended camera capture component. |
+| `client/src/components/scanner/ImageUploader.jsx` | **Placeholder:** intended image upload component. |
+| `client/src/components/scanner/ScanProgressTracker.jsx` | **Placeholder:** intended scan progress display. |
+| `client/src/components/species/SpeciesCard.jsx` | **Placeholder:** intended species summary card. |
+| `client/src/components/species/SpeciesDetailModal.jsx` | **Placeholder:** intended species details dialog. |
+| `client/src/components/species/SpeciesGrid.jsx` | **Placeholder:** intended species card grid. |
+| `client/src/components/species/SpeciesSearchFilter.jsx` | **Placeholder:** intended species search and filter controls. |
+
+### Frontend state, hooks, utilities and assets
+
+| File | Explanation |
+|---|---|
+| `client/src/context/AuthContext.jsx` | **Placeholder:** intended shared authentication state/context. |
+| `client/src/context/ScanContext.jsx` | **Placeholder:** intended shared image-scan state/context. |
+| `client/src/hooks/useAuth.js` | **Placeholder:** intended reusable authentication hook. |
+| `client/src/hooks/useCoralAnalysis.js` | **Placeholder:** intended reusable coral-analysis hook. |
+| `client/src/hooks/useImageScanner.js` | **Placeholder:** intended reusable scanner hook. |
+| `client/src/hooks/useReports.js` | **Placeholder:** intended reusable report hook. |
+| `client/src/hooks/useSpeciesCatalog.js` | **Placeholder:** intended reusable species catalogue hook. |
+| `client/src/utils/canvasHelpers.js` | **Placeholder:** intended canvas/image-coordinate helpers. |
+| `client/src/utils/constants.js` | **Placeholder:** intended shared frontend constants. |
+| `client/src/utils/exportHelpers.js` | **Placeholder:** intended shared file/report export helpers. |
+| `client/src/utils/formatters.js` | **Placeholder:** intended shared date/number/text formatters. |
+| `client/src/assets/hero.png` | Landing-page image asset. |
+| `client/src/assets/react.svg` | Unused React starter graphic. |
+| `client/src/assets/vite.svg` | Unused Vite starter graphic. |
+| `client/src/assets/icons/.gitkeep` | Keeps the icons asset directory tracked while it is empty. |
+| `client/src/assets/images/.gitkeep` | Keeps the images asset directory tracked while it is empty. |
+
+### Backend configuration and entry point — `server/`
+
+| File | Explanation |
+|---|---|
+| `server/package.json` | Backend package metadata, npm scripts and Express/Mongoose/CSV dependencies. |
+| `server/package-lock.json` | Exact backend dependency tree generated by npm. |
+| `server/.env.example` | Template for backend environment variables; do not put real secrets in Git. |
+| `server/.gitignore` | Ignores backend environment secrets, dependencies and generated files. |
+| `server/server.js` | Express entry point; configures middleware/CORS, optional MongoDB startup, API route mounting, health endpoint and error handling. |
+| `server/config/db.js` | Opens the MongoDB/Mongoose connection when a MongoDB URI is configured. |
+| `server/config/cloudinary.js` | Configures Cloudinary for optional image storage. |
+| `server/config/hfconfig.js` | Configures Hugging Face inference access; requires the relevant package, model and token to be set up. |
+
+### Backend routes — `server/routes/`
+
+| File | Explanation |
+|---|---|
+| `server/routes/pollutionroutes.js` | Defines pollution map, statistics and CSV-cache reload endpoints. |
+| `server/routes/densityroutes.js` | Defines density map and density statistics endpoints. |
+| `server/routes/authroutes.js` | Defines registration, login and current-user authentication endpoints. |
+| `server/routes/userroutes.js` | Defines user/profile endpoints. |
+| `server/routes/coralroutes.js` | Defines coral-analysis record endpoints. |
+| `server/routes/speciesroutes.js` | Defines species catalogue endpoints. |
+| `server/routes/reportroutes.js` | Defines saved-report endpoints and their protection middleware. |
+
+### Backend controllers — `server/controllers/`
+
+| File | Explanation |
+|---|---|
+| `server/controllers/pollutioncontroller.js` | Reads/parses the NOAA CSV, validates observations, groups compatible records, calculates summaries and serves pollution map/statistics responses. |
+| `server/controllers/densitycontroller.js` | Returns hard-coded illustrative reef-density records and summary statistics; not a verified survey feed. |
+| `server/controllers/authcontroller.js` | Handles user registration/login, password checks and authentication responses. |
+| `server/controllers/usercontroller.js` | Handles user/profile API operations. |
+| `server/controllers/coralcontrollers.js` | Handles saved coral-analysis record operations. |
+| `server/controllers/speciescontroller.js` | Handles species catalogue data operations. |
+| `server/controllers/reportcontroller.js` | Handles saved research/report operations. |
+| `server/controllers/detectioncontroller.js` | Handles species-detection record operations; check route mounting before assuming it is exposed by the API. |
+
+### Backend models, middleware, services, utilities and validators
+
+| File | Explanation |
+|---|---|
+| `server/models/user.js` | Mongoose user schema and password-related model behavior. |
+| `server/models/densityanalysis.js` | Mongoose schema for saved reef-density analysis records. |
+| `server/models/pollutionanalysis.js` | Mongoose schema for saved pollution-analysis records. |
+| `server/models/coralanalysis.js` | Mongoose schema for saved coral-analysis records. |
+| `server/models/species.js` | Mongoose schema for species catalogue entries. |
+| `server/models/speciesdetection.js` | Mongoose schema for species-detection records. |
+| `server/models/report.js` | Mongoose schema for saved reports. |
+| `server/middleware/authmiddleware.js` | Verifies JWTs and applies authentication/role checks to protected routes. |
+| `server/middleware/errormiddleware.js` | Converts thrown/request errors into consistent API error responses. |
+| `server/middleware/uploadmiddleware.js` | Configures Multer file-upload handling. |
+| `server/middleware/validationmiddleware.js` | Checks Express Validator results and rejects invalid request input. |
+| `server/services/coralAnalysisService.js` | Coral-analysis service layer/stub; requires a real analysis implementation for production use. |
+| `server/services/densityAnalysisService.js` | Density-analysis service layer/stub; current map controller uses illustrative records. |
+| `server/services/huggingFaceService.js` | Helper for calling Hugging Face inference for image/model tasks. |
+| `server/services/pollutionAnalysisService.js` | Pollution image-analysis service stub/mock; separate from the CSV-backed map controller. |
+| `server/services/reportService.js` | Report service layer/stub for report generation and persistence. |
+| `server/services/speciesDetectionService.js` | Species-detection service layer/stub for model-based identification. |
+| `server/utils/apierror.js` | Custom API error class carrying HTTP status information. |
+| `server/utils/generatetoken.js` | Creates signed JWT authentication tokens. |
+| `server/utils/imageprocessor.js` | Image-processing helper used by image-analysis workflows. |
+| `server/utils/samplehotspots.js` | Legacy illustrative hotspot dataset; the CSV-backed pollution controller is the current map data source. |
+| `server/validators/authvalidator.js` | Request validation rules for authentication inputs. |
+| `server/validators/coralvalidator.js` | Request validation rules for coral-analysis inputs. |
+| `server/validators/pollutionvalidator.js` | Request validation rules for pollution inputs. |
+| `server/validators/speciesvalidator.js` | Request validation rules for species inputs. |
+
+## 4. API reference
+
+| Method | Endpoint | Purpose |
+|---|---|---|
+| GET | `/api/health` | Backend health and MongoDB configuration status. |
+| GET | `/api/pollution/map` | Geolocated observations aggregated from the CSV. |
+| GET | `/api/pollution/stats` | Pollution record/site/measurement summaries. |
+| POST | `/api/pollution/import` | Clears the in-memory CSV cache so it is re-read; it does not upload a new CSV file. |
+| GET | `/api/density/map` | Illustrative reef-density records. |
+| GET | `/api/density/stats` | Summary of illustrative reef-density records. |
+| / | `/api/auth/*` | Authentication routes. |
+| / | `/api/users/*` | User routes; database-backed. |
+| / | `/api/coral/*` | Coral routes; database-backed. |
+| / | `/api/species/*` | Species routes; database-backed. |
+| / | `/api/reports/*` | Report routes; database-backed and protected as configured. |
+
+## 5. Run locally
+
+Use a current Node.js LTS release and npm. Start the backend and frontend in separate terminals.
+
+**Backend**
 
 ```bash
 cd server
 npm install
 cp .env.example .env
-# MONGO_URI may be left unset if you only want to run the CSV map.
+# MONGO_URI can remain unset when testing only the CSV map.
 npm run dev
 ```
 
-Frontend terminal:
+**Frontend**
 
 ```bash
 cd client
@@ -198,85 +303,35 @@ cp .env.example .env
 npm run dev
 ```
 
-Open the Vite URL printed in the terminal (usually http://localhost:5173). Test the API at http://localhost:5000/api/health and http://localhost:5000/api/pollution/map.
+Open the Vite development URL shown in the terminal (usually `http://localhost:5173`). The API is usually available at `http://localhost:5000/api/health` and `http://localhost:5000/api/pollution/map`.
 
-## Deployment
+## 6. Deployment
 
 ### Render backend
 
-Create a new Render Blueprint from this repository and deploy the reefwatch-api service described by render.yaml. Then test:
+Deploy the repository using the Blueprint in `render.yaml`. After deployment, test:
 
-- https://YOUR-API-HOST/api/health
-- https://YOUR-API-HOST/api/pollution/map
-
-The map response should include isLive: false, the NOAA source label, totalReadings and hotspots.
+- `https://YOUR-RENDER-SERVICE.onrender.com/api/health`
+- `https://YOUR-RENDER-SERVICE.onrender.com/api/pollution/map`
 
 ### Vercel frontend
 
-Set VITE_API_BASE_URL to https://YOUR-API-HOST/api in Vercel project environment variables for Preview and Production, then redeploy. Set backend CLIENT_URL to the production Vercel origin. The API also permits Reefwatch Vercel preview origins.
+Set `VITE_API_BASE_URL` to the backend API root, including `/api` (for example, `https://YOUR-RENDER-SERVICE.onrender.com/api`) in Vercel Preview and Production environments. Redeploy after changing the variable because Vite embeds it at build time.
 
 ### Environment variables
 
-Frontend: VITE_API_BASE_URL (backend API root, including /api).
+- Frontend: `VITE_API_BASE_URL`.
+- Backend: `PORT`, `NODE_ENV`, `CLIENT_URL`, `MONGO_URI`, `JWT_SECRET`, `JWT_EXPIRES_IN`, Cloudinary credentials and Hugging Face settings as required by the enabled modules.
 
-Backend: PORT, NODE_ENV, CLIENT_URL, MONGO_URI, JWT_SECRET, JWT_EXPIRES_IN, CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET, HF_API_TOKEN and HF_MODEL_URL. MongoDB, Cloudinary and Hugging Face settings are only needed for their corresponding features.
+Never commit real API keys, passwords, database URLs or tokens. MongoDB is not required for the CSV map endpoints; database-backed user/report/analysis features need a valid `MONGO_URI`.
 
-## Known gaps before production use
+## 7. Known limitations and next work
 
-- Several frontend components, hooks and pages listed above are empty placeholders.
-- Login/register frontend forms are not wired even though backend auth routes exist.
-- Reef-density data is hard-coded; some coral/pollution analysis services return mock values.
-- AI inference needs a verified model, configured credentials, installed dependencies and evaluation.
-- Sample coral JPEGs and the legacy logo/favicon files are invalid placeholders.
-- Add automated tests for CSV parsing, missing measurements, coordinate bounds, aggregation by unit/method, API responses and map rendering.
+- The density report is implemented as a UI, but its current source records are illustrative hard-coded values.
+- AI coral analysis, image scanning, species catalogue and several report/auth UI components are placeholders or require external model/database configuration.
+- Several component, hook, context and utility files listed above are currently empty placeholders.
+- The sample coral JPEGs and public logo/ICO files listed above are 2-byte placeholders, not valid image assets.
+- The CSV map uses archived NOAA observations and is not a real-time pollution monitor.
+- Add automated tests for CSV parsing, coordinate validation, grouping by unit/method/context, API response shape, report filtering/export and frontend route behavior.
 
-
-## Density report and global pollution map
-
-The application exposes two separate analysis views:
-
-- **Global microplastics map:** `/dashboard` renders `MarineMapView.jsx`, which calls `getPollutionMap()` through `pollutionApi.js`. The Express route `/api/pollution/map` is handled by `pollutioncontroller.js`, which parses `server/uploads/microplastics.csv`, validates coordinates, groups observations without mixing units/methods/settings, and returns archived NOAA records. If the API is unreachable, the map intentionally displays labelled demo markers.
-- **Density report:** `/reports/density` renders `ReportsPage.jsx`. It requests `/api/density/map` and `/api/density/stats` through `densityApi.js`, displays summary cards and a searchable/filterable reef-coverage table, and exports the currently filtered rows as a CSV file in the browser. The page labels the current density values as **illustrative samples** because `densitycontroller.js` currently uses hard-coded example values. These are not verified reef survey observations.
-
-### Density report file flow
-
-| File | What its code does |
-|---|---|
-| `client/src/pages/ReportsPage.jsx` | Fetches density map/statistics in parallel; handles loading/error states; filters by reef/country and density class; renders summary cards/table; creates a downloadable CSV from visible rows. |
-| `client/src/routes/AppRoutes.jsx` | Registers `/reports/density` and maps it to `ReportsPage`; keeps dashboard at `/dashboard`. |
-| `client/src/components/common/Navbar.jsx` | Adds navigation links to Home, Global pollution map and Density report. |
-| `client/src/api/densityApi.js` | Axios wrappers for `GET /density/map` and `GET /density/stats`. |
-| `server/routes/densityroutes.js` | Maps `/map` and `/stats` to density controller handlers. |
-| `server/controllers/densitycontroller.js` | Currently returns illustrative hard-coded reef coverage records and calculated summary counts; replace this source with a cited survey dataset before making scientific claims. |
-| `client/src/components/dashboard/MarineMapView.jsx` | Displays the global microplastics map, data source/mode, filters, markers and source details. |
-| `client/src/api/pollutionApi.js` | Axios wrappers for pollution map and statistics. |
-| `server/routes/pollutionroutes.js` | Maps pollution API paths to CSV controller functions. |
-| `server/controllers/pollutioncontroller.js` | Parses and aggregates the NOAA CSV and returns map hotspots/statistics. |
-| `server/uploads/microplastics.csv` | Bundled archived source observations consumed by the pollution controller. |
-
-### Running locally
-
-From the repository root, install and start the backend and frontend in separate terminals:
-
-```bash
-cd server
-npm install
-npm start
-```
-
-```bash
-cd client
-npm install
-npm run dev
-```
-
-Set `VITE_API_BASE_URL=http://localhost:5000/api` in the frontend environment for local development. Configure backend `CLIENT_URL=http://localhost:5173`. MongoDB is not required for the CSV-backed pollution map or the current illustrative density endpoints; database-backed account and saved-report features do require a valid `MONGO_URI`.
-
-### Route quick reference
-
-| Browser route | Feature |
-|---|---|
-| `/` | Reefwatch landing page |
-| `/dashboard` | Global NOAA microplastics observations map (archived dataset, not live sensors) |
-| `/reports/density` | Reef density summary, searchable table and CSV export (illustrative API data at present) |
-| `/login`, `/register` | Authentication screens; check current implementation before treating as complete |
+Check `PROJECT_GUIDE.md` for additional implementation notes and deployment troubleshooting.
