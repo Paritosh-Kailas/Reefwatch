@@ -27,8 +27,10 @@ function readSamples() {
   // measurement or a source-provided concentration class. A missing numeric
   // measurement should not erase an otherwise geolocated observation.
   cachedSamples = rows.map((row, index) => {
-    const lat = Number(String(row['Latitude (degree)'] ?? '').trim());
-    const lng = Number(String(row['Longitude (degree)'] ?? '').trim());
+    const rawLat = String(row['Latitude (degree)'] ?? '').trim();
+    const rawLng = String(row['Longitude (degree)'] ?? '').trim();
+    const lat = rawLat ? Number(rawLat) : NaN;
+    const lng = rawLng ? Number(rawLng) : NaN;
     const rawMeasurement = String(row['Microplastics Measurement'] ?? '').trim();
     const parsedMeasurement = rawMeasurement === '' ? NaN : Number(rawMeasurement);
     const concentrationClass = String(row['Concentration Class'] ?? '').trim();
@@ -44,7 +46,7 @@ function readSamples() {
       beach: String(row['Beach Location'] || row.Subregion || row.Region || row.Country || 'Unspecified site'),
       marineSetting: String(row['Marine Setting'] || 'Unspecified setting'),
       samplingMethod: String(row['Sampling Method'] || 'Unspecified method'),
-      concentration: Number.isFinite(parsedMeasurement) ? parsedMeasurement : null,
+      concentration: Number.isFinite(parsedMeasurement) && parsedMeasurement >= 0 ? parsedMeasurement : null,
       unit,
       concentrationClass,
       reference: String(row.DOI || row['Long Reference'] || row['Short Reference'] || ''),
