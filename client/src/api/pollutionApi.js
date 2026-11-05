@@ -1,4 +1,3 @@
- import axiosInstance from './axiosInstance';
-
-// baseURL in axiosInstance should end with /api
-export const getPollutionMap = (params = {}) => axiosInstance.get('/pollution/map', { params });
+import axiosInstance from './axiosInstance';
+export const getPollutionMap  = (params = {}) => axiosInstance.get('/pollution/map', { params });
+export const getPollutionStats = ()             => axiosInstance.get('/pollution/stats');

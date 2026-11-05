@@ -31,10 +31,30 @@ const MOCK_REEF_POLLUTION_DATA = [
   { id: 25, name: "Comoros Reef", location: "Comoros", lat: -11.6455, lng: 43.3333, pollutionSeverity: "Low", waterClarity: 70, debrisCount: 3, primaryDebris: "Plastic Bag", entanglementHazard: false, toxicityRisk: "Low" },
 ];
 
-/** GET /api/pollution/map */
+/** GET /api/pollution/map
+ * Returns hotspots shaped for MarineMapView:
+ *   { hotspots: [{id, lat, lng, score, count, name}], totalReadings }
+ */
 const getPollutionMap = async (req, res) => {
   try {
-    res.json({ success: true, count: MOCK_REEF_POLLUTION_DATA.length, data: MOCK_REEF_POLLUTION_DATA });
+    // Transform mock data to the shape MarineMapView expects
+    const hotspots = MOCK_REEF_POLLUTION_DATA.map((r) => ({
+      id: r.id,
+      lat: r.lat,
+      lng: r.lng,
+      name: r.name,
+      location: r.location,
+      score: r.waterClarity != null ? Math.round(100 - r.waterClarity) : 50, // invert: low clarity = high pollution score
+      count: r.debrisCount,
+      scans: 0,
+      pollutionSeverity: r.pollutionSeverity,
+      primaryDebris: r.primaryDebris,
+      entanglementHazard: r.entanglementHazard,
+      toxicityRisk: r.toxicityRisk,
+    }));
+
+    const totalReadings = hotspots.reduce((sum, h) => sum + h.count, 0);
+    res.json({ success: true, hotspots, totalReadings });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Server error fetching pollution data' });
   }

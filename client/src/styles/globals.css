@@ -1,1 +1,23 @@
- 
+/* Reefwatch global styles */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@700&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  margin: 0;
+  font-family: 'Inter', system-ui, sans-serif;
+  background-color: #061a22;
+  color: #e2e8f0;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Leaflet z-index fix inside flex/grid */
+.leaflet-pane { z-index: 400 !important; }
+.leaflet-control { z-index: 800 !important; }
+.leaflet-top, .leaflet-bottom { z-index: 800 !important; }
