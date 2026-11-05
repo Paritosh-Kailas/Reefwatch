@@ -1,10 +1,10 @@
 import { Link } from 'react-router-dom';
 
 const stats = [
-  { label: 'Reef systems tracked',  value: '25+' },
-  { label: 'Pollution hotspots',    value: '163K' },
-  { label: 'Species catalogued',    value: '800+' },
-  { label: 'Scans processed',       value: '12K' },
+  { label: 'Map coverage', value: 'Global' },
+  { label: 'Observation source', value: 'NOAA NCEI' },
+  { label: 'Data type', value: 'Archived samples' },
+  { label: 'Map access', value: 'Public' },
 ];
 
 export default function HomePage() {
