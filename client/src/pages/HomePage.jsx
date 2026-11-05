@@ -54,19 +54,32 @@ export default function HomePage() {
         <h2 className="mb-12 text-center font-serif text-3xl font-bold">What Reefwatch Does</h2>
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {[
-            { icon: '🗺️', title: 'Global Pollution Map', desc: 'Explore archived, geolocated microplastics observations worldwide and inspect each sample site.' },
-            { icon: '🤖', title: 'AI Coral Analysis',    desc: 'Planned module. Image-based coral health analysis is not yet connected to a verified production model.' },
-            { icon: '🐠', title: 'Species Catalog',      desc: 'Planned module. Species records need a verified catalog source before public release.' },
-            { icon: '🧪', title: 'Debris Detection',     desc: 'Planned module. Image detection requires a configured and evaluated model.' },
-            { icon: '📊', title: 'Density Reports',      desc: 'Prototype module. Current reef-density values are illustrative rather than verified observations.' },
-            { icon: '📋', title: 'Research Reports',     desc: 'Planned module. Report generation is not yet part of the verified map workflow.' },
-          ].map((f) => (
-            <div key={f.title} className="rounded-2xl border border-teal-900/40 bg-[#071f26]/60 p-6 transition hover:border-teal-600/40">
-              <span className="text-3xl">{f.icon}</span>
-              <h3 className="mt-3 font-serif text-lg font-semibold text-teal-100">{f.title}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-slate-400">{f.desc}</p>
-            </div>
-          ))}
+            { icon: '🗺️', title: 'Global Pollution Map', desc: 'Open the interactive global map of archived NOAA NCEI microplastics observations, inspect sample markers and source measurements.', to: '/dashboard', action: 'Explore map →' },
+            { icon: '🤖', title: 'AI Coral Analysis', desc: 'Planned module. Image-based coral health analysis is not yet connected to a verified production model.' },
+            { icon: '🐠', title: 'Species Catalog', desc: 'Planned module. Species records need a verified catalog source before public release.' },
+            { icon: '🧪', title: 'Debris Detection', desc: 'Planned module. Image detection requires a configured and evaluated model.' },
+            { icon: '📊', title: 'Density Reports', desc: 'Open the reef-density report to review summary statistics, search reef records, filter density classes and export the visible rows as CSV. Current values are illustrative.', to: '/reports/density', action: 'View density report →' },
+            { icon: '📋', title: 'Research Reports', desc: 'Planned module. Report generation is not yet part of the verified map workflow.' },
+          ].map((feature) => {
+            const cardClass = "group block rounded-2xl border border-teal-900/40 bg-[#071f26]/60 p-6 transition hover:-translate-y-1 hover:border-teal-500/70 hover:bg-[#0a2b33]/80 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400";
+            const content = (
+              <>
+                <span className="text-3xl">{feature.icon}</span>
+                <h3 className="mt-3 font-serif text-lg font-semibold text-teal-100">{feature.title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-slate-400">{feature.desc}</p>
+                {feature.to && <span className="mt-4 inline-flex text-sm font-semibold text-teal-300 transition group-hover:gap-2">{feature.action}</span>}
+              </>
+            );
+            return feature.to ? (
+              <Link key={feature.title} to={feature.to} className={cardClass} aria-label={`${feature.title}: open feature`}>
+                {content}
+              </Link>
+            ) : (
+              <div key={feature.title} className={cardClass}>
+                {content}
+              </div>
+            );
+          })}
         </div>
       </section>
 
