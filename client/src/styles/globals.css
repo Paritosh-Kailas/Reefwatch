@@ -21,3 +21,23 @@ body {
 .leaflet-pane { z-index: 400 !important; }
 .leaflet-control { z-index: 800 !important; }
 .leaflet-top, .leaflet-bottom { z-index: 800 !important; }
+
+
+/* Shared form field styling for sign-in and registration screens */
+.auth-input {
+  display: block;
+  width: 100%;
+  border: 1px solid rgb(19 78 74 / 0.6);
+  border-radius: 0.75rem;
+  background: #061a22;
+  padding: 0.75rem 1rem;
+  color: #f1f5f9;
+  outline: none;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+.auth-input::placeholder { color: #475569; }
+.auth-input:focus {
+  border-color: #2dd4bf;
+  box-shadow: 0 0 0 2px rgb(20 184 166 / 0.2);
+}
+.auth-input:disabled { cursor: not-allowed; opacity: 0.6; }
