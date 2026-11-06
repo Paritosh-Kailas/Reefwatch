@@ -21,7 +21,7 @@ const register = async (req, res, next) => {
     if (!name || !email || !password) {
       return next(new ApiError(400, 'Name, email and password are required'));
     }
-    if (!/^\\S+@\\S+\\.\\S+$/.test(email)) {
+    if (!/^\S+@\S+\.\S+$/.test(email)) {
       return next(new ApiError(400, 'Please provide a valid email address'));
     }
     if (password.length < 8) {
