@@ -1,19 +1,43 @@
 import { Link } from 'react-router-dom';
 import LoginForm from '../components/auth/LoginForm';
 
+/**
+ * LoginPage
+ * Full-page wrapper for the sign-in experience.
+ * Layout: ocean-dark background, centred card with logo + LoginForm.
+ */
 export default function LoginPage() {
   return (
-    <main className="flex min-h-[calc(100vh-64px)] items-center justify-center bg-[#061a22] px-4 py-12">
-      <section className="w-full max-w-md rounded-2xl border border-teal-900/50 bg-[#071f26] p-7 shadow-2xl shadow-black/20 sm:p-9">
-        <div className="mb-7 text-center">
-          <span className="text-4xl" aria-hidden="true">🪸</span>
-          <p className="mt-3 text-xs font-semibold uppercase tracking-[0.2em] text-teal-400">Welcome back</p>
-          <h1 className="mt-2 font-serif text-3xl font-bold text-teal-100">Sign in to Reefwatch</h1>
-          <p className="mt-3 text-sm leading-relaxed text-slate-400">Access your Reefwatch account and continue exploring marine observations.</p>
+    <div className="flex min-h-[calc(100vh-56px)] items-center justify-center bg-[#061a22] px-4 py-12">
+      <div className="w-full max-w-sm">
+
+        {/* Logo / branding */}
+        <div className="mb-8 text-center">
+          <Link to="/" className="inline-flex flex-col items-center gap-1">
+            <span className="text-5xl">🪸</span>
+            <span className="font-serif text-2xl font-bold tracking-tight text-teal-200">
+              Reefwatch
+            </span>
+          </Link>
+          <p className="mt-2 text-sm text-slate-400">
+            Sign in to monitor coral reefs worldwide
+          </p>
         </div>
-        <LoginForm />
-        <p className="mt-7 text-center text-xs text-slate-600"><Link to="/" className="hover:text-teal-300">← Back to home</Link></p>
-      </section>
-    </main>
+
+        {/* Card */}
+        <div className="rounded-2xl border border-teal-900/40 bg-[#071f26] p-8 shadow-2xl shadow-teal-950/50">
+          <h1 className="mb-6 font-serif text-xl font-bold text-teal-100">
+            Welcome back
+          </h1>
+          <LoginForm />
+        </div>
+
+        {/* Back link */}
+        <p className="mt-6 text-center text-xs text-slate-500">
+          <Link to="/" className="hover:text-teal-400">← Back to home</Link>
+        </p>
+
+      </div>
+    </div>
   );
 }

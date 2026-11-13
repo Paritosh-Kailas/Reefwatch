@@ -1,60 +1,53 @@
-import { createContext, useCallback, useEffect, useMemo, useState } from 'react';
-import { getMe, login as loginRequest, register as registerRequest } from '../api/authApi';
+import { createContext, useCallback, useEffect, useState } from 'react';
+import { login as apiLogin, register as apiRegister, getMe } from '../api/authApi';
 
+/**
+ * AuthContext
+ * Provides { user, token, login, register, logout, loading } to the whole app.
+ * Token is persisted in localStorage under the key "rw_token".
+ */
 export const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [user,    setUser]    = useState(null);
+  const [loading, setLoading] = useState(true); // true while we check stored token on mount
 
+  // ── On mount: restore session from localStorage ───────────────────────────
   useEffect(() => {
-    let active = true;
     const token = localStorage.getItem('rw_token');
-    if (!token) {
-      setLoading(false);
-      return () => { active = false; };
-    }
+    if (!token) { setLoading(false); return; }
 
     getMe()
-      .then(({ data }) => {
-        if (active) setUser(data.user);
-      })
-      .catch(() => {
-        localStorage.removeItem('rw_token');
-        if (active) setUser(null);
-      })
-      .finally(() => {
-        if (active) setLoading(false);
-      });
-
-    return () => { active = false; };
+      .then(({ data }) => setUser(data.user))
+      .catch(() => localStorage.removeItem('rw_token')) // token expired / invalid
+      .finally(() => setLoading(false));
   }, []);
 
-  const saveSession = useCallback((data) => {
-    if (data.token) localStorage.setItem('rw_token', data.token);
-    setUser(data.user || null);
+  // ── login(email, password) → throws on failure ────────────────────────────
+  const login = useCallback(async (email, password) => {
+    const { data } = await apiLogin({ email, password });
+    localStorage.setItem('rw_token', data.token);
+    setUser(data.user);
     return data.user;
   }, []);
 
-  const signIn = useCallback(async (credentials) => {
-    const { data } = await loginRequest(credentials);
-    return saveSession(data);
-  }, [saveSession]);
+  // ── register(name, email, password, role?) → throws on failure ───────────
+  const register = useCallback(async (fields) => {
+    const { data } = await apiRegister(fields);
+    localStorage.setItem('rw_token', data.token);
+    setUser(data.user);
+    return data.user;
+  }, []);
 
-  const signUp = useCallback(async (details) => {
-    const { data } = await registerRequest(details);
-    return saveSession(data);
-  }, [saveSession]);
-
-  const signOut = useCallback(() => {
+  // ── logout ────────────────────────────────────────────────────────────────
+  const logout = useCallback(() => {
     localStorage.removeItem('rw_token');
     setUser(null);
   }, []);
 
-  const value = useMemo(
-    () => ({ user, loading, signIn, signUp, signOut, isAuthenticated: Boolean(user) }),
-    [user, loading, signIn, signUp, signOut]
+  return (
+    <AuthContext.Provider value={{ user, loading, login, register, logout }}>
+      {children}
+    </AuthContext.Provider>
   );
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
