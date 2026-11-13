@@ -1,6 +1,8 @@
 /**
- * Pollution Controller
- * Handles marine pollution & debris data for the global map
+ * CSV-backed marine microplastics map.
+ *
+ * Source: NOAA NCEI Marine Microplastics Database (archived observations).
+ * These are historical field samples, not live sensor readings.
  */
 const parseMicroplastics = require('../utils/parseMicroplastics');
 

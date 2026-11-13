@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: reefwatch-api
+    runtime: node
+    plan: free
+    rootDir: server
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: CLIENT_URL
+        value: https://reefwatch-self.vercel.app

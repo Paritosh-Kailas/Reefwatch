@@ -1,10 +1,10 @@
 import { Link } from 'react-router-dom';
 
 const stats = [
-  { label: 'Reef systems tracked',  value: '25+' },
-  { label: 'Pollution hotspots',    value: '163K' },
-  { label: 'Species catalogued',    value: '800+' },
-  { label: 'Scans processed',       value: '12K' },
+  { label: 'Map coverage', value: 'Global' },
+  { label: 'Observation source', value: 'NOAA NCEI' },
+  { label: 'Data type', value: 'Archived samples' },
+  { label: 'Map access', value: 'Public' },
 ];
 
 export default function HomePage() {
@@ -19,8 +19,7 @@ export default function HomePage() {
           <span className="text-teal-300">Coral Reefs</span>
         </h1>
         <p className="mt-6 max-w-2xl text-lg leading-relaxed text-slate-300">
-          Reefwatch uses AI-powered image analysis to track coral bleaching, marine pollution,
-          species density and debris across the world's most critical reef ecosystems — in real time.
+          Explore geolocated marine microplastics observations from the NOAA NCEI dataset on a global map. Inspect source records, sample dates, measurement units and concentration classes.
         </p>
         <div className="mt-10 flex flex-wrap justify-center gap-4">
           <Link
@@ -55,26 +54,39 @@ export default function HomePage() {
         <h2 className="mb-12 text-center font-serif text-3xl font-bold">What Reefwatch Does</h2>
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {[
-            { icon: '🗺️', title: 'Global Pollution Map', desc: 'Real-time heatmap of pollution scores across 25+ major reef systems worldwide.' },
-            { icon: '🤖', title: 'AI Coral Analysis',    desc: 'Upload a dive photo and get instant bleaching severity, health scores, and coral type identification.' },
-            { icon: '🐠', title: 'Species Catalog',      desc: 'Browse 800+ documented reef species with conservation status and sighting records.' },
-            { icon: '🧪', title: 'Debris Detection',     desc: 'Identify plastic, fishing nets, microplastics and other debris from underwater images.' },
-            { icon: '📊', title: 'Density Reports',      desc: 'Track coral and algae coverage percentages over time with exportable charts.' },
-            { icon: '📋', title: 'Research Reports',     desc: 'Generate PDF reports for research submissions, NGOs, and conservation agencies.' },
-          ].map((f) => (
-            <div key={f.title} className="rounded-2xl border border-teal-900/40 bg-[#071f26]/60 p-6 transition hover:border-teal-600/40">
-              <span className="text-3xl">{f.icon}</span>
-              <h3 className="mt-3 font-serif text-lg font-semibold text-teal-100">{f.title}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-slate-400">{f.desc}</p>
-            </div>
-          ))}
+            { icon: '🗺️', title: 'Global Pollution Map', desc: 'Open the interactive global map of archived NOAA NCEI microplastics observations, inspect sample markers and source measurements.', to: '/dashboard', action: 'Explore map →' },
+            { icon: '🤖', title: 'AI Coral Analysis', desc: 'Planned module. Image-based coral health analysis is not yet connected to a verified production model.' },
+            { icon: '🐠', title: 'Species Catalog', desc: 'Planned module. Species records need a verified catalog source before public release.' },
+            { icon: '🧪', title: 'Debris Detection', desc: 'Planned module. Image detection requires a configured and evaluated model.' },
+            { icon: '📊', title: 'Density Reports', desc: 'Open the reef-density report to review summary statistics, search reef records, filter density classes and export the visible rows as CSV. Current values are illustrative.', to: '/reports/density', action: 'View density report →' },
+            { icon: '📋', title: 'Research Reports', desc: 'Planned module. Report generation is not yet part of the verified map workflow.' },
+          ].map((feature) => {
+            const cardClass = "group block rounded-2xl border border-teal-900/40 bg-[#071f26]/60 p-6 transition hover:-translate-y-1 hover:border-teal-500/70 hover:bg-[#0a2b33]/80 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400";
+            const content = (
+              <>
+                <span className="text-3xl">{feature.icon}</span>
+                <h3 className="mt-3 font-serif text-lg font-semibold text-teal-100">{feature.title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-slate-400">{feature.desc}</p>
+                {feature.to && <span className="mt-4 inline-flex text-sm font-semibold text-teal-300 transition group-hover:gap-2">{feature.action}</span>}
+              </>
+            );
+            return feature.to ? (
+              <Link key={feature.title} to={feature.to} className={cardClass} aria-label={`${feature.title}: open feature`}>
+                {content}
+              </Link>
+            ) : (
+              <div key={feature.title} className={cardClass}>
+                {content}
+              </div>
+            );
+          })}
         </div>
       </section>
 
       {/* CTA */}
       <section className="border-t border-teal-900/40 bg-teal-900/20 py-16 text-center">
         <h2 className="font-serif text-3xl font-bold">Ready to explore?</h2>
-        <p className="mt-3 text-slate-400">Open the global pollution map and start monitoring reefs.</p>
+        <p className="mt-3 text-slate-400">Open the global microplastics map and explore archived observations.</p>
         <Link
           to="/dashboard"
           className="mt-6 inline-block rounded-full bg-teal-500 px-8 py-3 font-semibold text-white shadow-lg transition hover:bg-teal-400"
@@ -84,7 +96,7 @@ export default function HomePage() {
       </section>
 
       <footer className="py-6 text-center text-xs text-slate-600">
-        © {new Date().getFullYear()} Reefwatch — built for ocean conservation research
+        © {new Date().getFullYear()} Reefwatch — marine microplastics observations explorer
       </footer>
     </div>
   );
